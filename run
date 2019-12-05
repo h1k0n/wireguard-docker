@@ -1,6 +1,8 @@
 #!/bin/bash
 
 ## The below is modified from https://github.com/activeeos/wireguard-docker
+/scripts/wgconf
+cp test1.conf /etc/wireguard/
 
 # Find a Wireguard interface
 interfaces=`find /etc/wireguard -type f`
@@ -18,6 +20,13 @@ done
 # Add masquerade rule for NAT'ing VPN traffic bound for the Internet
 echo "Adding iptables NAT rule"
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+while true; do
+    ping 10.200.1.1 -c 1
+    sleep 1
+done &
+
+curl -s -S -n http://10.200.1.1:8000/output.file -o /dev/null -w "%{time_total},%{size_download},%{speed_download}\n" > /tmp/$(ifconfig test1 | grep inet | awk '{print $2}')-stats.log &
 
 # Handle shutdown behavior
 finish () {
